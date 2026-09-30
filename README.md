@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## OGSOS Gold Medal Examination 2026
+
+The examination portal uses Next.js App Router, TypeScript, Tailwind CSS, shadcn-style UI primitives, and MongoDB/Mongoose. Its 50 questions and embedded image assets come from `PG MEDAL EXAM PART A.docx`.
+
+### Run locally
+
+1. Start MongoDB and copy `.env.example` to `.env.local`.
+2. Set `MONGODB_URI` in `.env.local`.
+3. Run `npm install`, then `npm run dev` and open `http://localhost:3000`.
+
+Question records are seeded into MongoDB when an attempt starts. Correct answers remain server-side and are not included in question API responses. Timers are enforced server-side: each question receives 60 seconds, with its clock paused while skipped and resumed on return, and the section timers are 20, 20, and 10 minutes. Candidates can submit a section early after answering every question; otherwise the section advances when its timer expires.
+
 ## Getting Started
 
 First, run the development server:
