@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock3, FileCheck2, GraduationCap, HeartPulse, Image as ImageIcon, ShieldCheck, Stethoscope } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock3, GraduationCap, HeartPulse, Image as ImageIcon, ShieldCheck, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EventNotice } from "@/components/event-notice";
 
 type PublicQuestion = { id: string; section: 1|2|3; question: string; options?: string[]; image?: string[] };
 type Section = { id: 1|2|3; title: string; shortTitle: string; count: number; durationSeconds: number };
-type ExamPayload = { status: "active"; currentSection: 1|2|3; activeQuestionId: string | null; section: Section; secondsLeft: number; questionSecondsLeft: Record<string,number>; canSubmitSection: boolean; questions: PublicQuestion[]; answers: Record<string,string> } | { status: "completed"; score: number; completedAt: string };
+type ExamPayload = { status: "active"; currentSection: 1|2|3; activeQuestionId: string | null; section: Section; secondsLeft: number; questionSecondsLeft: Record<string,number>; canSubmitSection: boolean; questions: PublicQuestion[]; answers: Record<string,string> } | { status: "completed" };
 
 function formatTime(seconds: number) { const mm = Math.floor(seconds / 60).toString().padStart(2,"0"); const ss = (seconds % 60).toString().padStart(2,"0"); return `${mm}:${ss}`; }
 
@@ -31,14 +31,17 @@ export default function Home() {
   const answeredCount = useMemo(() => activeExam?.questions.filter(q => Boolean(activeExam.answers[q.id])).length ?? 0, [activeExam]);
 
   const applyExam = useCallback((data: ExamPayload) => {
-    setExam(data);
-    if (data.status === "active") {
-      const activeIndex = data.activeQuestionId ? data.questions.findIndex(q => q.id === data.activeQuestionId) : -1;
-      if (sectionRef.current !== null && sectionRef.current !== data.currentSection) setQuestionIndex(activeIndex >= 0 ? activeIndex : 0);
-      else if (activeIndex >= 0) setQuestionIndex(activeIndex);
-      else setQuestionIndex(index => Math.min(index, data.questions.length - 1));
-      sectionRef.current = data.currentSection;
+    if (data.status === "completed") {
+      window.sessionStorage.removeItem("ogsos-exam-session");
+      setExam(data);
+      return;
     }
+    setExam(data);
+    const activeIndex = data.activeQuestionId ? data.questions.findIndex(q => q.id === data.activeQuestionId) : -1;
+    if (sectionRef.current !== null && sectionRef.current !== data.currentSection) setQuestionIndex(activeIndex >= 0 ? activeIndex : 0);
+    else if (activeIndex >= 0) setQuestionIndex(activeIndex);
+    else setQuestionIndex(index => Math.min(index, data.questions.length - 1));
+    sectionRef.current = data.currentSection;
   }, []);
 
   const loadAttempt = useCallback(async (id: string) => {
@@ -150,15 +153,10 @@ export default function Home() {
     finally { setSubmitting(false); }
   };
 
-  if (exam?.status === "completed") {
-    return <main className="min-h-screen px-4 py-10 sm:py-16"><div className="mx-auto max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-card">
-      <div className="bg-ink px-8 py-10 text-center text-white sm:px-14"><div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10"><FileCheck2 className="h-8 w-8 text-teal-200" /></div><p className="text-xs font-bold uppercase tracking-[.22em] text-teal-200">Examination submitted</p><h1 className="mt-3 text-3xl font-bold">Your result</h1><p className="mt-2 text-sm text-slate-300">OGSOS Postgraduate Gold Medal Examination 2026</p></div>
-      <div className="px-7 py-10 text-center sm:px-14"><p className="text-sm text-slate-500">Candidate</p><p className="mt-1 text-lg font-semibold text-ink">{candidateName}</p><div className="mx-auto mt-8 flex h-40 w-40 flex-col items-center justify-center rounded-full border-[10px] border-teal/10 bg-teal/5"><span className="text-5xl font-bold text-teal">{exam.score}</span><span className="mt-1 text-sm text-slate-500">out of 50</span></div><p className="mt-5 text-sm text-slate-500">Your responses have been submitted and saved.</p><div className="mt-9 grid gap-3 sm:grid-cols-3">{[{label:"Section 1", count:20},{label:"Section 2",count:20},{label:"Section 3",count:10}].map(s=><div key={s.label} className="rounded-2xl border border-slate-100 p-4"><CheckCircle2 className="mx-auto h-5 w-5 text-teal"/><p className="mt-2 text-sm font-semibold">{s.label}</p><p className="mt-1 text-xs text-slate-500">Included in total score</p></div>)}</div></div>
-    </div></main>;
-  }
+  if (exam?.status === "completed") return <main className="medical-grid flex min-h-screen items-center justify-center px-4 py-10"><section className="w-full max-w-2xl rounded-[28px] bg-white px-7 py-12 text-center shadow-card sm:px-14 sm:py-16"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-teal/10 text-teal"><CheckCircle2 className="h-9 w-9"/></div><p className="mt-7 text-xs font-bold uppercase tracking-[.2em] text-teal">OGSOS Postgraduate Gold Medal Examination 2026</p><h1 className="mt-3 text-3xl font-bold text-ink sm:text-4xl">Congratulations{candidateName ? `, ${candidateName}` : ""}!</h1><p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-600">Your examination has been submitted successfully. Your responses have been saved. Thank you for participating.</p><Button className="mt-8" onClick={()=>window.location.replace("/")}>Go to home page <ArrowRight className="h-4 w-4"/></Button></section></main>;
 
   if (!activeExam) return <main className="medical-grid min-h-screen px-4 py-8 sm:py-14"><div className="mx-auto max-w-5xl">
-    <header className="mb-8 flex items-center justify-between"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-lg shadow-teal/20"><Stethoscope className="h-6 w-6"/></div><div><p className="text-sm font-bold tracking-wide text-ink">OGSOS</p><p className="text-xs text-slate-500">Examination Portal</p></div></div><div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-medium text-slate-600 sm:flex"><ShieldCheck className="h-4 w-4 text-teal"/> Secure examination session</div></header>
+    <header className="mb-8 flex items-center justify-between"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal text-white shadow-lg shadow-teal/20"><Stethoscope className="h-6 w-6"/></div><div><p className="text-sm font-bold tracking-wide text-ink">OGSOS</p><p className="text-xs text-slate-500">Examination Portal</p></div></div><div className="flex items-center gap-2"><div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-medium text-slate-600 sm:flex"><ShieldCheck className="h-4 w-4 text-teal"/> Secure examination session</div><Button variant="outline" size="sm" asChild><a href="/admin">Admin login <ArrowRight className="h-4 w-4"/></a></Button></div></header>
     <EventNotice />
     <div className="grid overflow-hidden rounded-[28px] bg-white shadow-card lg:grid-cols-[1.05fr_.95fr]">
       <section className="relative overflow-hidden bg-ink px-7 py-10 text-white sm:px-11 sm:py-14"><div className="absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/10"/><div className="absolute -right-10 -top-10 h-44 w-44 rounded-full border border-white/10"/><div className="relative"><div className="mb-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[.16em] text-teal-200"><GraduationCap className="h-4 w-4"/> Gold Medal Examination · 2026</div><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal/20 text-teal-200"><HeartPulse className="h-7 w-7"/></div><h1 className="mt-6 max-w-md text-3xl font-bold leading-tight sm:text-[38px]">OGSOS Postgraduate Gold Medal Examination</h1><p className="mt-4 max-w-md text-sm leading-6 text-slate-300">Welcome to your online examination. Please enter your candidate details to begin.</p><div className="mt-10 grid grid-cols-3 gap-3">{[{n:"50",label:"Questions"},{n:"50",label:"Marks"},{n:"50 min",label:"Duration"}].map(x=><div key={x.label} className="rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-xl font-bold">{x.n}</p><p className="mt-1 text-[11px] text-slate-300">{x.label}</p></div>)}</div><div className="mt-9 space-y-3">{["Three timed sections","Answers save as you go","Sections lock when time ends"].map(t=><div key={t} className="flex items-center gap-2.5 text-xs text-slate-300"><Check className="h-4 w-4 text-teal-200"/>{t}</div>)}</div></div></section>

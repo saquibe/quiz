@@ -77,7 +77,7 @@ export async function syncAttempt(attempt: any) {
 }
 
 export function attemptPayload(attempt: any) {
-  if (attempt.status === "completed") return { status: "completed", score: attempt.score, completedAt: attempt.completedAt };
+  if (attempt.status === "completed") return { status: "completed" } as const;
   const section = attempt.currentSection;
   const info = sectionInfo[section - 1];
   const secondsLeft = Math.max(0, Math.ceil((new Date(attempt.sectionStartedAt).getTime() + info.durationSeconds * 1000 - Date.now()) / 1000));

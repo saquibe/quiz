@@ -10,4 +10,6 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: #f3f7f8; color: #172b3a; font-family: Arial, Helvetica, sans-serif; }
 button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
 .medical-grid { background-image: radial-gradient(#cbd9dc 0.7px, transparent 0.7px); background-size: 18px 18px; }

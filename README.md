@@ -2,6 +2,12 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## OGSOS Gold Medal Examination 2026
 
+### Admin dashboard
+
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env.local` to enable administrator sign-in at `/admin`. Set `ADMIN_SESSION_SECRET` to a long, random secret used to sign the eight-hour HTTP-only admin session cookie. If omitted, the session signature uses `ADMIN_PASSWORD`.
+
+The dashboard provides candidate attempt search, status filters, score/date sorting, answer and unanswered-question details, and CSV export. All admin data and export APIs require a valid signed admin session.
+
 The examination portal uses Next.js App Router, TypeScript, Tailwind CSS, shadcn-style UI primitives, and MongoDB/Mongoose. Its 50 questions and embedded image assets come from `PG MEDAL EXAM PART A.docx`.
 
 ### Run locally
